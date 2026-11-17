@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
@@ -8,10 +9,10 @@ const port = 8080;
 
 // Database connection
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'datascience',
-    database: 'vendormanagementsystem'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || 'vendormanagementsystem'
 });
 
 db.connect((err) => {
