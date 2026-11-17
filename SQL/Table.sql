@@ -71,9 +71,9 @@ create table userinfo (
     userpassword varchar(255) not null
 );
 
--- Insert admin user into userinfo table
-insert into userinfo (username, email, userrole, userpassword)
-values ('hashir', 'hashirahmed@gmail.com', 'admin', '12345678');
+-- Admin user: passwords are stored as bcrypt hashes, so create the admin with
+--   npm run create-admin
+-- (set ADMIN_USERNAME, ADMIN_EMAIL and ADMIN_PASSWORD in .env first)
 
 ALTER TABLE vendor ADD certifications TEXT NOT NULL;
 ALTER TABLE userinfo MODIFY userrole VARCHAR(255) NOT NULL DEFAULT 'vendor';

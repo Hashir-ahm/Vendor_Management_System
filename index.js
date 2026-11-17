@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require('express');
 const mysql = require('mysql2');
+const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const path = require('path');
 
@@ -77,8 +78,15 @@ app.post('/signup', (req, res) => {
 
     const defaultRole = 'vendor';
 
+    if (!password) {
+        return res.status(400).send('Password is required.');
+    }
+
+    // Never store the plain password: save a bcrypt hash instead
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
     const query = `insert into userinfo (username, email, userrole, userpassword) values (?, ?, ?, ?)`;
-    db.query(query, [username, email, defaultRole, password], (err, result) => {
+    db.query(query, [username, email, defaultRole, hashedPassword], (err, result) => {
         if (err) {
             console.error('Error registering user:', err);
             return res.status(500).send('Error registering user.');
@@ -99,17 +107,32 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
-    const query = `select username, userrole from userinfo where username = ? and userpassword = ?`;
+    const query = `select userid, userrole, userpassword from userinfo where username = ?`;
 
-    db.query(query, [username, password], (err, results) => {
+    db.query(query, [username], (err, results) => {
         if (err) {
             console.error('Error logging in:', err);
             res.status(500).send('Error logging in.');
             return;
         }
 
-        if (results.length > 0) {
-            const { username, userrole } = results[0];
+        const user = results[0];
+        let passwordOk = false;
+
+        if (user && password) {
+            if (user.userpassword.startsWith('$2')) {
+                // Normal case: compare against the stored bcrypt hash
+                passwordOk = bcrypt.compareSync(password, user.userpassword);
+            } else if (user.userpassword === password) {
+                // Old account saved before hashing was added: accept it once and upgrade it to a hash
+                passwordOk = true;
+                db.query('update userinfo set userpassword = ? where userid = ?',
+                    [bcrypt.hashSync(password, 10), user.userid]);
+            }
+        }
+
+        if (passwordOk) {
+            const { userrole } = user;
             if (userrole === 'admin') {
                 res.redirect('/admin-menu');
             } 

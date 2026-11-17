@@ -14,7 +14,7 @@ A web app for managing a company's vendors, contracts, departments, budgets and 
 
 ## Tech stack
 
-Node.js · Express · MySQL (`mysql2`) · HTML/CSS front end (`public/`)
+Node.js · Express · MySQL (`mysql2`) · bcrypt · HTML/CSS front end (`public/`)
 
 ## Project structure
 
@@ -36,13 +36,17 @@ SQL/Table.sql     Database schema (userinfo, vendor, contract, department, budge
    ```
 3. Configure your database login:
    ```bash
-   cp .env.example .env    # then put your MySQL password in .env
+   cp .env.example .env    # then put your MySQL password and admin details in .env
    ```
-4. Install and run:
+4. Install, create the admin account and run:
    ```bash
    npm install
-   node index.js
+   npm run create-admin
+   npm start
    ```
-5. Open http://localhost:8080.
+5. Open http://localhost:8080 and log in with the admin details from `.env`.
 
-> ⚠️ Student project: passwords are stored in plain text. Do not use with real credentials — hash passwords (e.g. bcrypt) before any real deployment.
+## Security
+
+- Passwords are hashed with **bcrypt** before they are stored; accounts created before hashing was added are upgraded automatically on their next login.
+- Database and admin credentials are read from `.env`, which is never committed.
